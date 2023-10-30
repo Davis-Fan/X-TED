@@ -1,0 +1,263 @@
+//vector<vector<int>> standard_ted_1 (char* x_node, vector<vector<int>> x_adj, char* y_node, vector<vector<int>> y_adj){
+//    int m = (int)x_adj.size();
+//    int n = (int)y_adj.size();
+//    vector<vector<int>> Delta_view (m, vector<int>(n,0));
+//
+//    int i;
+//    int j;
+//
+//    for (i=0; i<m; i++){
+//        for (j=0; j<n; j++){
+//            if(x_node[i] != y_node[j]){
+//                Delta_view[i][j] =1;
+//            }
+//        }
+//    }
+//
+//    vector<int> x_orl = outermost_right_leaves(x_adj);
+//    vector<int> x_kr = key_roots(x_orl);
+//    vector<int> y_orl = outermost_right_leaves(y_adj);
+//    vector<int> y_kr = key_roots(y_orl);
+//
+//    vector<vector<int>> D_forest (m+1, vector<int>(n+1,0));
+//    vector<vector<int>> D_tree (m, vector<int>(n,0));
+//
+//    vector<vector<int>> result = standard_ted_2(x_orl,x_kr,y_orl,y_kr,Delta_view,D_forest,D_tree);
+//
+//    return result;
+//
+//}
+
+//int standard_ted (char* x_node, vector<vector<int>> x_adj, char* y_node, vector<vector<int>> y_adj){
+//    int m = (int)x_adj.size();
+//    int n = (int)y_adj.size();
+////    printf("%d, %d\n", m, n);
+//    if (m == 0){
+//        return n;
+//    }
+//    if (n == 0){
+//        return m;
+//    }
+//    vector<vector<int>> distance = standard_ted_1(x_node,x_adj,y_node,y_adj);
+//    int k = distance[0][0];
+////    printf("The distance is %d\n",k);
+//    return k;
+//}
+
+
+vector<vector<int>> standard_ted_2(vector<int>& x_orl, vector<int>& x_kr, vector<int>& y_orl, vector<int>& y_kr, vector<vector<int>>& Delta, vector<vector<int>>& D, vector<vector<int>>& D_tree){
+//    int m = (int)x_orl.size();
+//    int n = (int)y_orl.size();
+
+    int K = (int)x_kr.size();
+    int L = (int)y_kr.size();
+
+    int k;
+    int l;
+
+    int i;
+    int j;
+
+    int i_0;
+    int j_0;
+    int i_max;
+    int j_max;
+
+    for (k=0; k<K; k++){
+        for (l=0; l<L; l++){
+
+            i_0 = x_kr[k];
+            j_0 = y_kr[l];
+            i_max = x_orl[i_0] + 1;
+            j_max = y_orl[j_0] + 1;
+            D[i_max][j_max] = 0;
+
+            for (i=i_max-1; i>i_0-1; i--){
+                D[i][j_max] = 1 + D[i+1][j_max];
+            }
+
+            for (j=j_max-1; j>j_0-1; j--){
+                D[i_max][j] = 1 + D[i_max][j+1];
+            }
+
+            for (i=i_max-1; i>i_0-1; i--){
+                for (j=j_max-1; j>j_0-1; j--){
+
+                    if ((x_orl[i] == x_orl[i_0]) & (y_orl[j] == y_orl[j_0])){
+
+                        D[i][j] = min3(Delta[i][j] + D[i+1][j+1], 1 + D[i+1][j], 1 + D[i][j+1]);
+                        D_tree[i][j] = D[i][j];
+
+                    }else{
+
+                        D[i][j] = min3(D_tree[i][j] + D[x_orl[i]+1][y_orl[j]+1], 1 + D[i+1][j], 1 + D[i][j+1]);
+
+
+                    }
+
+                }
+            }
+
+
+        }
+
+    }
+
+    vector<vector<int>> final_result = D_tree;
+    return final_result;
+}
+
+//    vector<int> x = {1,2,3,4};
+//    printf("%lu\n", x.size());
+
+//    vector<vector<int>> y = {{1,2},{},{5,6}};
+//    printf("%lu\n", y.size());
+//    printf("y = %lu\n", y[2][1]);
+
+//    vector<vector<int>> z = {{1,3},{2},{},{4,5},{},{}};
+//    vector<int> orl_test = outermost_right_leaves(z);
+//    vector<int> ky_test = key_roots(orl_test);
+//    print_vector(ky_test);
+//    print_vector(orl_test);
+//    printf("\n");
+
+
+//    vector<vector<int>> z2 = {{1,4},{2,3},{},{},{5,6},{},{}};
+//    vector<int> orl_test_2 = outermost_right_leaves(z2);
+//    vector<int> ky_test_2 = key_roots(orl_test_2);
+//    print_vector(orl_test_2);
+//    print_vector(ky_test_2);
+//    printf("\n");
+
+
+//    vector<vector<int>> z3 = {{1,2},{},{3,4,5},{},{},{6},{}};
+//    vector<int> orl_test_3 = outermost_right_leaves(z3);
+//    vector<int> ky_test_3 = key_roots(orl_test_3);
+//    print_vector(ky_test_3);
+//    print_vector(orl_test_3);
+
+//    char a_node[5]= {'a','b','c','d','e'};
+//    vector<vector<int>> a_adj = {{1,4},{2,3},{},{},{}};
+//    char b_node[2]= {'a','b'};
+//    vector<vector<int>> b_adj = {{1},{}};
+//    int f = standard_ted(a_node, a_adj, b_node, b_adj);
+//
+//    clock_t start, end;
+//    start = clock();
+//    test_1();
+//    end = clock();
+//    cout << "Running time is " << ((end - start)/CLOCKS_PER_SEC) << "s" << endl;
+
+
+
+//    int a_begin = 0;
+//    int b_begin = 0;
+//    int a_end = 3;
+//    int b_end = 3;
+//    vector<vector<int>> test_2D (a_end+1, vector<int>(b_end+1,-1));
+//    cout << endl;
+
+//    int inv = 0;
+//    while (b_end-inv>=b_begin){
+//        test_2D[a_end][b_end-inv] = 0;
+//        int jec = 1;
+//        while (jec<=inv){
+//            test_2D[a_end-jec][b_end-inv+jec] = 0;
+//            jec++;
+//        }
+//        inv++;
+//    }
+//
+//    int inv_2 = 1;
+//    while (a_end - inv_2 >= a_begin){
+//        test_2D[a_end-inv_2][b_begin] = 0;
+//        int jec = 1;
+//        while (a_end - inv_2 - jec >= a_begin){
+//            test_2D[a_end-inv_2-jec][b_begin+jec] = 0;
+//            jec++;
+//        }
+//        inv_2++;
+//    }
+
+
+//    for (int i=i_begin; i<=i_end; i++){
+//        task_11_1(m,i,L,x_orl,x_kr,y_orl,y_kr,Delta,D_forest_new,D_tree);
+//    }
+//    for(int inter=0; inter<numbers; inter++){
+//        if (inter != numbers-1){
+//            threads_pool.push_back(thread(task_11, K*L/numbers*inter + 1, K*L/numbers*(inter+1),m, L, ref(x_orl),ref(x_kr),ref(y_orl),ref(y_kr),ref(Delta), ref(D_forest_new), ref(D_tree)));
+//        }else{
+//            threads_pool.push_back(thread(task_11, K*L/numbers*inter + 1, K*L,m, L, ref(x_orl),ref(x_kr),ref(y_orl),ref(y_kr),ref(Delta), ref(D_forest_new), ref(D_tree)));
+//        }
+//    }
+
+CSR Graph
+
+//    for (int i=1; i<K*L; i++){
+//        for (int j=0;j<i;j++){
+//            x_subtree_left = Table_index[i][0];
+//            x_subtree_right = x_orl[x_subtree_left];
+//            y_subtree_left = Table_index[i][1];
+//            y_subtree_right = y_orl[y_subtree_left];
+//            if (Table_index[j][0]>=x_subtree_left & Table_index[j][0]<=x_subtree_right & Table_index[j][1] >= y_subtree_left & Table_index[j][1] <= y_subtree_right){
+//                cout << "Table " << i << " depends on Table " << j << endl;
+//                adjacent_list.push_back(j);
+//                num_depended_table++;
+//            }
+//        }
+//        index[i] = num_depended_table;
+//    }
+
+template<typename T>
+struct AtomicVector:vector<T> {
+    AtomicVector(size_t cap) {
+        tail = 0;
+        vec.resize(cap);
+    }
+
+    void Add(const T& e) {
+        vec[tail++] = e;
+    }
+
+    void Clear() {
+        tail = 0;
+//        vec.clear();
+    }
+
+    atomic_int tail;
+    std::vector<T> vec;
+};
+
+for (int i=0; i<k; i++){
+    for (int j=i+1;j<L;j++){
+        int x = A[j];
+        B[i] += x;
+    }
+}
+
+//    bool t1= binary_search(x_leaf_node.begin(),x_leaf_node.end(),5);
+//    bool t2= binary_search(y_leaf_node.begin(),y_leaf_node.end(),0);
+
+    for (int i=1; i<K*L; i++){
+        if(depth[i] == 0){
+            continue;
+        } else {
+            auto it = table_No.lower_bound(i);
+//            cout << i << " " << std::distance(table_No.begin(), it) << endl;
+            for (auto rit = set<int>::reverse_iterator(it); rit != table_No.rend(); ++rit) {
+                int j = *rit;
+                if (Table_index[j].first >= Table_index[i].first & Table_index[j].first <= x_orl[Table_index[i].first] & Table_index[j].second >= Table_index[i].second & Table_index[j].second <= y_orl[Table_index[i].second]) {
+                    depth[i] = depth[j] + 1;
+                    break;
+                }
+
+            }
+        }
+    }
+
+
+3/8/2023 Wednesday
+
+//    while (worklist1[0] != -1 && worklist1[0] != K*L-1)
+//    while (worklist1[0] != -1)
+//    task_18_1(K*L-1,L,x_orl,x_kr,y_orl,y_kr,Delta, D, D_tree);

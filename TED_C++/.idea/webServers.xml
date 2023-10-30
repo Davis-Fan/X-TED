@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="WebServers">
+    <option name="servers">
+      <webServer id="af26ef44-ae17-4eb4-b13d-60f752509880" name="ri2">
+        <fileTransfer accessType="SFTP" host="mri.cse.ohio-state.edu" port="22" sshConfigId="64284507-b265-41f0-a484-e91239d5c138" sshConfig="fan.1090@mri.cse.ohio-state.edu:22 password">
+          <advancedOptions>
+            <advancedOptions dataProtectionLevel="Private" keepAliveTimeout="0" passiveMode="true" shareSSLContext="true" />
+          </advancedOptions>
+        </fileTransfer>
+      </webServer>
+      <webServer id="b322518f-b619-4e26-ab1e-eb4166da218a" name="osc">
+        <fileTransfer accessType="SFTP" host="owens.osc.edu" port="22" sshConfigId="564ccca6-4655-4c9c-8f2e-85fd75098bb6" sshConfig="dayifan@owens.osc.edu:22 password">
+          <advancedOptions>
+            <advancedOptions dataProtectionLevel="Private" keepAliveTimeout="0" passiveMode="true" shareSSLContext="true" />
+          </advancedOptions>
+        </fileTransfer>
+      </webServer>
+    </option>
+  </component>
+</project>
