@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<project version="4">
-  <component name="SshConfigs">
-    <configs>
-      <sshConfig authType="PASSWORD" host="mri.cse.ohio-state.edu" id="64284507-b265-41f0-a484-e91239d5c138" port="22" nameFormat="DESCRIPTIVE" username="fan.1090" useOpenSSHConfig="true" />
-      <sshConfig authType="PASSWORD" host="owens.osc.edu" id="564ccca6-4655-4c9c-8f2e-85fd75098bb6" port="22" nameFormat="DESCRIPTIVE" username="dayifan" useOpenSSHConfig="true" />
-    </configs>
-  </component>
-</project>
