@@ -197,20 +197,10 @@ vector<vector<int>> standard_ted_1 (vector<string>& x_node, vector<vector<int>>&
 
     vector<vector<int>> D_forest_2 (m+1, vector<int>(n+1,-1));
     vector<vector<int>> D_tree_2 (m, vector<int>(n,-1));
-    switch (parallel_version) {
-        // O is the sequential basic algorithm from Zhang. and Shasha.
-        case 0:{
-            result=standard_ted_2(x_orl,x_kr,y_orl,y_kr,Delta_view,D_forest,D_tree);
-            break;
-        }
 
-        // 1 is the parallel CPU-verion X-TED and the num_threads is the number of threads used in this method
-        case 1:{
-            vector<vector<int>> result_parallel = parallel_cpu_ted(x_orl, x_kr, y_orl, y_kr, Delta_view, D_forest_2,D_tree_2, m, n, num_threads,x_adj,y_adj);
-            result = result_parallel;
-            break;
-        }
-    }
+    vector<vector<int>> result_parallel = parallel_cpu_ted(x_orl, x_kr, y_orl, y_kr, Delta_view, D_forest_2,D_tree_2, m, n, num_threads,x_adj,y_adj);
+    result = result_parallel;
+
     return result;
 }
 
