@@ -2,9 +2,12 @@
 
 This is the code repository for X-TED
 
+
+
 ## Supplementray of X-TED
 
 The PDF file in this folder is the supplementray of X-TED, which contains the details of dynamic parallel strategy and its mathematics model.
+
 
 
 
@@ -18,6 +21,7 @@ Firstly, use the command line below to download this repository.
 $ git clone https://github.com/Davis-Fan/X-TED.git
 $ cd X-TED
 ```
+
 
 ## Dataset
 
@@ -70,7 +74,7 @@ $ make
 $ ./X-TED_GPU ../../Sampled_Dataset/1_Swissport/swissport_nodes_1000.txt ../../Sampled_Dataset/1_Swissport/swissport_nodes_adj_1000.txt
 ```
 
-​		The program will execute the same test for 20 runs.
+​		The program will execute the *same* test for 20 runs.
 
 ----------------------
 
@@ -104,3 +108,4 @@ Run the program. Three input parameters are needed. The first parameter is the n
 $ ./X-TED_CPU 8 ../../Sampled_Dataset/1_Swissport/swissport_nodes_1000.txt ../../Sampled_Dataset/1_Swissport/swissport_nodes_adj_1000.txt
 ```
 
+Also, the program will execute the *same* test for 20 runs.
