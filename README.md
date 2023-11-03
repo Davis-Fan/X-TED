@@ -2,14 +2,14 @@
 
 This is the code repository for X-TED
 
-
+---
 
 ## Supplementray of X-TED
 
 The PDF file in this folder is the supplementray of X-TED, which contains the details of dynamic parallel strategy and its mathematics model.
 
 
-
+---
 
 ## Download the code repository for X-TED
 
@@ -22,6 +22,7 @@ $ git clone https://github.com/Davis-Fan/X-TED.git
 $ cd X-TED
 ```
 
+---
 
 ## Dataset
 
@@ -42,7 +43,7 @@ It can be represent by: {a{b}{c{d}{e}} in bracket format. It means that node *a*
 
 In the test, we need to input two paths that contain the information of trees. For example, if we want to test a pair of 1000-nodes in the swissport dataset, the first parameter is the "Sampled_Dataset/1_Swissport/swissport_nodes_1000.txt " which includes the **labels** of all nodes for 1000-node trees (sampled) in the swissport. The second parameter is the "Sampled_Dataset/1_Swissport/swissport_nodes_adj_1000.txt" which includes the **structure** of all 1000-node trees (sampled) in the swissport.
 
-
+---
 
 ## Run the X-TED
 
