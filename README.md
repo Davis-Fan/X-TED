@@ -103,7 +103,7 @@ $ cmake ..
 $ make
 ```
 
-Run the program. Three input parameters are needed. The first parameter is the number of threads you want to use here and the other two are parameters. For example, if we want to test a pair of 1000-nodes in the swissport dataset by using 8-cores to compute, please use:
+Run the program. Three input parameters are needed. The first parameter is the number of threads you want to use here and the other two are file paths. For example, if we want to test a pair of 1000-nodes in the swissport dataset by using 8-cores to compute, please use:
 
 ```
 $ ./X-TED_CPU 8 ../../Sampled_Dataset/1_Swissport/swissport_nodes_1000.txt ../../Sampled_Dataset/1_Swissport/swissport_nodes_adj_1000.txt
