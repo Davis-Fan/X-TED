@@ -21,7 +21,7 @@ $ cd X-TED
 
 ## Dataset
 
-The complete version of the four dataset we used are uploaded in the link [X-TED Dataset](https://buckeyemailosu-my.sharepoint.com/:f:/g/personal/fan_1090_buckeyemail_osu_edu/EhXIR-JzOopIpw6KDA42Pn0BR5Z80VRh4Z9cGspeY7b8Cw?e=6zVslY). Due to the storage limit, we only show some randomly sample cases in the folder **Sample_Dataset**, which contains trees from all datasets with nodes ranging from 100 nodes to 1000 nodes.
+The complete version of the four dataset we used are uploaded in the link [X-TED Dataset](https://buckeyemailosu-my.sharepoint.com/:f:/g/personal/fan_1090_buckeyemail_osu_edu/EhXIR-JzOopIpw6KDA42Pn0BR5Z80VRh4Z9cGspeY7b8Cw?e=6zVslY). Due to the storage limit, we only show some randomly sampled cases in the folder **Sample_Dataset**, which contains trees from all datasets with nodes ranging from 100 nodes to 1000 nodes.
 
 We use two files to store the labels of all nodes and the structure of trees respectively, based on the bracket format. For example, for a tree like below:
 
