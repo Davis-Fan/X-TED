@@ -3,11 +3,11 @@
 
 // Compute one single table in parallel
 __device__ void task_GPU(int* x_orl, int* x_kr, int* y_orl, int* y_kr, int* Delta, int* D, int* D_tree, int thread_in_number, int table_in_number, int L, int m, int n){
-    int row = table_in_number / L;
-    int column = table_in_number % L;
-    int num_table_offset = thread_in_number*(m+1)*(n+1);
+    auto row = table_in_number / L;
+    auto column = table_in_number % L;
+    uint64_t num_table_offset = thread_in_number*((uint64_t)m+1)*(n+1);
     int width = n+1;
-    int index;
+    uint64_t index;
     int i;
     int j;
 
@@ -56,8 +56,8 @@ __device__ void task_GPU(int* x_orl, int* x_kr, int* y_orl, int* y_kr, int* Delt
 
 
 // Inter-block lock-free synchronization
-__device__ volatile int Array_in[82];
-__device__ volatile int Array_out[82];
+__device__ volatile int Array_in[128];
+__device__ volatile int Array_out[128];
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -95,9 +95,9 @@ __device__ void __gpu_sync(int goalVal, volatile int *Arrayin, volatile int *Arr
 
 // Compute one single unit
 __device__ void single_unit_10(int* x_orl, int* y_orl, int i_0, int i_max, int j_0, int j_max, int i, int j, int* Delta, int* D, int* D_tree, int thread_in_number, int m, int n){
-    int num_table_offset = thread_in_number*(m+1)*(n+1);
+    uint64_t num_table_offset = thread_in_number*((uint64_t)m+1)*(n+1);
     int width = n+1;
-    int index = j + i*width + num_table_offset;
+    uint64_t index = j + i*width + num_table_offset;
 //    printf("ok\n");
     if ((i == i_max) & (j == j_max)){
         D[index] = 0;
@@ -135,7 +135,7 @@ __device__ void __gpu_sync_range_update(int startBlockIdx, int endBlockIdx, int 
         }
     }
 
-    __syncthreads();
+//    __syncthreads(); (Delete)
 
     if (bid == startBlockIdx){
         if (tid_in_blk >= startBlockIdx & tid_in_blk <= endBlockIdx){
@@ -228,8 +228,9 @@ vector<vector<int>> parallel_standard_ted_test(vector<int>& x_orl, vector<int>& 
     int current_depth = 0;
 
     // Compute the max number of tables that can be stored in memory
-    double limitation = (8*1024*1024*1024.0)/((m+1)*(n+1)*4);
+    double limitation = (22.3*1024*1024*1024.0)/((m+1)*(n+1)*4);
     int batch_size = min(K*L,int(limitation));
+
 
     // x_orl, x_kr, y_orl, y_kr
     thrust::device_vector<int> x_orl_d(x_orl);
@@ -251,8 +252,14 @@ vector<vector<int>> parallel_standard_ted_test(vector<int>& x_orl, vector<int>& 
     // depth
     thrust::device_vector<int> depth_d(depth);
 
+
+//    printf("space  = %.1f\n",(((float)m+1)*(n+1)*batch_size*4)/(1024*1024*1024.0));
+
+
     // D
-    thrust::device_vector<int> D_d((m+1)*(n+1)*batch_size, 0);
+    thrust::device_vector<int> D_d;
+    D_d.resize( ((uint64_t)m+1)*(n+1)*batch_size, 0);
+
 
     // Pointer: x_orl, x_kr, y_orl, y_kr, Delta, D_tree, depth, worklist1, worklist2, D
     int *p_x_orl_d = thrust::raw_pointer_cast(x_orl_d.data());
@@ -336,6 +343,7 @@ vector<vector<int>> parallel_standard_ted_test(vector<int>& x_orl, vector<int>& 
 
             // Multi-Blocks Approach
             if(multi_block_queue.size() != 0){
+                printf("Hello\n");
                 thrust::host_vector<int> multi_block_queue_h(multi_block_queue.size());
                 cudaMemcpyAsync(thrust::raw_pointer_cast(multi_block_queue_h.data()),multi_block_queue.data(), multi_block_queue.size() * sizeof(int),cudaMemcpyDeviceToHost, stream.cuda_stream());
                 stream.Sync();
@@ -355,6 +363,7 @@ vector<vector<int>> parallel_standard_ted_test(vector<int>& x_orl, vector<int>& 
         stream.Sync();
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+        CHECK_CUDA(cudaDeviceSynchronize());
         // Sort by Size
         queue2.set_size(stream, queue1.size());
         numBlocks = (queue1.size() + blockSize - 1) / blockSize;
@@ -369,7 +378,8 @@ vector<vector<int>> parallel_standard_ted_test(vector<int>& x_orl, vector<int>& 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         // Filtering
         numBlocks = (queue1.size() + blockSize - 1) / blockSize;
-        filter_new<<<numBlocks, blockSize, 0, stream.cuda_stream()>>>(d_queue1, d_queue2, d_large_queue, d_block_size_queue, d_multi_block_queue, 15, 8750, 4500000);
+//        filter_new<<<numBlocks, blockSize, 0, stream.cuda_stream()>>>(d_queue1, d_queue2, d_large_queue, d_block_size_queue, d_multi_block_queue, 15, 18750, 25250000); // 3090
+        filter_new<<<numBlocks, blockSize, 0, stream.cuda_stream()>>>(d_queue1, d_queue2, d_large_queue, d_block_size_queue, d_multi_block_queue, 15, 18750, 25250000);
         stream.Sync();
         int old_size = queue1.size();
         queue1.set_size(stream,old_size -multi_block_queue.size()- large_queue.size()-block_size_queue.size());
@@ -414,6 +424,7 @@ void simple_thread(Stream& stream_single, float& total_milliseconds, int limitat
 
     int block = 256;
     int grid = 128;
+//    int grid = 8;
 
     cudaEvent_t start, stop;
     float milliseconds = 0;
@@ -424,7 +435,7 @@ void simple_thread(Stream& stream_single, float& total_milliseconds, int limitat
     simple_thread_parallel<<<grid, block, 0, stream_single.cuda_stream()>>>(p_x_orl_d, p_x_kr_d, p_y_orl_d, p_y_kr_d, p_Delta_d, p_D_d, p_D_tree_d, n, m, L, d_queue1, limitation);
 
     cudaEventRecord(stop, stream_single.cuda_stream());
-    cudaEventSynchronize(stop);
+    CHECK_CUDA(cudaEventSynchronize(stop));
     cudaEventElapsedTime(&milliseconds, start, stop);
     cudaEventDestroy(start);
     cudaEventDestroy(stop);
@@ -622,6 +633,27 @@ void simple_warp (Stream& stream, float& total_milliseconds, int limitation, thr
 
 //    printf("--- Warp =: %u \n", queue_h.size());
 
+    // 3090
+//    if(limitation>=4096){
+//        grid = 512;
+//    }else{
+//        grid = 256;
+//    }
+
+    // A100
+//    if(limitation>=4096){
+//        grid = 512;
+//    }else{
+//        grid = 512;
+//    }
+
+    // H100
+    if(limitation>=4096){
+        grid = 1024;
+    }else{
+        grid = 512;
+    }
+
     cudaEvent_t start, stop;
     float milliseconds = 0;
     cudaEventCreate(&start);
@@ -631,7 +663,7 @@ void simple_warp (Stream& stream, float& total_milliseconds, int limitation, thr
     simple_warp_parallel<<<grid, block, 0, stream.cuda_stream()>>>(limitation, p_d_column_major, queue_h.size(), p_x_orl_d, p_y_orl_d, p_d_i_0_array, p_d_i_max_array, p_d_j_0_array, p_d_j_max_array, p_Delta_d, p_D_d, p_D_tree_d, n, m);
 
     cudaEventRecord(stop, stream.cuda_stream());
-    cudaEventSynchronize(stop);
+    CHECK_CUDA(cudaEventSynchronize(stop));
     cudaEventElapsedTime(&milliseconds, start, stop);
 
 //    printf("Single-Warp = %.3fms\n", milliseconds);
@@ -734,7 +766,6 @@ __global__ void simple_block_parallel(int limitation, int* p_d_column_major, int
                         for (int step = 0; step < x_begin + y_begin - x_end - y_end + 1; step++) {
                             if ((x_loc + y_loc == x_begin + y_begin - step) & (y_loc >= y_end) & (x_loc >= x_end)) {
 
-
                                 single_unit_10(x_orl, y_orl, i_0, i_max, j_0, j_max, x_loc, y_loc,
                                                Delta, D, D_tree, num_in_thread, m, n);
                                 y_loc--;
@@ -811,7 +842,23 @@ void simple_block (Stream& stream_mul, float& total_milliseconds, int limitation
 
 
     int block = 1024;
-    int grid = 256;
+    int grid;
+    // 3090
+//    if(limitation>=512){
+//        grid = 1024;
+//    } else if (limitation >= 256){
+//        grid = 512;
+//    } else{
+//        grid = 256;
+//    }
+
+    if(limitation>=512){
+        grid = 1024;
+    } else if (limitation >= 256){
+        grid = 512;
+    } else{
+        grid = 256;
+    }
 
     cudaEvent_t start, stop;
     float milliseconds = 0;
@@ -822,7 +869,7 @@ void simple_block (Stream& stream_mul, float& total_milliseconds, int limitation
     simple_block_parallel<<<grid, block, 0, stream_mul.cuda_stream()>>>(limitation, p_d_column_major, queue_h.size(), p_x_orl_d, p_y_orl_d, p_d_i_0_array, p_d_i_max_array, p_d_j_0_array, p_d_j_max_array, p_Delta_d, p_D_d, p_D_tree_d, n, m);
 
     cudaEventRecord(stop, stream_mul.cuda_stream());
-    cudaEventSynchronize(stop);
+    CHECK_CUDA(cudaEventSynchronize(stop));
     cudaEventElapsedTime(&milliseconds, start, stop);
     cudaEventDestroy(start);
     cudaEventDestroy(stop);
@@ -930,10 +977,10 @@ void multi_block (Stream& stream_mul, float& total_milliseconds, int limitation,
         i_max_array[i] = x_orl[i_0_array[i]] + 1;
         j_max_array[i] = y_orl[j_0_array[i]] + 1;
         if(i_max_array[i]-i_0_array[i]+1 > j_max_array[i]-j_0_array[i]+1){
-            blocks_per_table[i] = 2;
+            blocks_per_table[i] = 8;
             column_major[i] = 1;
         }else{
-            blocks_per_table[i] = 2;
+            blocks_per_table[i] = 8;
             column_major[i] = 0;
         }
     }
@@ -968,7 +1015,7 @@ void multi_block (Stream& stream_mul, float& total_milliseconds, int limitation,
 
 
     cudaEventRecord(stop, stream_mul.cuda_stream());
-    cudaEventSynchronize(stop);
+    CHECK_CUDA(cudaEventSynchronize(stop));
     cudaEventElapsedTime(&milliseconds, start, stop);
     cudaEventDestroy(start);
     cudaEventDestroy(stop);
@@ -1044,7 +1091,7 @@ void last_table(Stream& stream_sing, float& total_milliseconds, int i, int threa
     int j_max = y_orl[j_0] + 1;
 
     int one_block = 256;
-    int one_grid = 4;
+    int one_grid = 8;
 
     cudaEvent_t start, stop;
     float milliseconds = 0;
@@ -1053,7 +1100,7 @@ void last_table(Stream& stream_sing, float& total_milliseconds, int i, int threa
     cudaEventRecord(start, stream_sing.cuda_stream());
     initial_last<<<one_grid, one_block, 0, stream_sing.cuda_stream()>>>(p_D_d, n, m);
     cudaEventRecord(stop, stream_sing.cuda_stream());
-    cudaEventSynchronize(stop);
+    CHECK_CUDA(cudaEventSynchronize(stop));
     cudaEventElapsedTime(&milliseconds, start, stop);
     cudaEventDestroy(start);
     cudaEventDestroy(stop);
@@ -1075,7 +1122,7 @@ void last_table(Stream& stream_sing, float& total_milliseconds, int i, int threa
     last_table_parallel<<<test_grid, test_block, 0, stream_sing.cuda_stream()>>>(number_per_thread, p_x_orl_d, p_y_orl_d, p_Delta_d, p_D_d, p_D_tree_d, n, m);
 
     cudaEventRecord(stop, stream_sing.cuda_stream());
-    cudaEventSynchronize(stop);
+    CHECK_CUDA(cudaEventSynchronize(stop));
     cudaEventElapsedTime(&milliseconds, start, stop);
     cudaEventDestroy(start);
     cudaEventDestroy(stop);
