@@ -388,7 +388,7 @@ vector<vector<int>> parallel_standard_ted_test(vector<int>& x_orl, vector<int>& 
 
 
     int final = D_tree_d[0];
-    printf("The total final distance is %u\n", final);
+//    printf("The total final distance is %u\n", final);
     printf("Measured time for total parallel execution = %.3fms\n", total_milliseconds);
 
     cudaMemcpy(D_tree_trans.data(), p_D_tree_d, sizeof(int) * m * n, cudaMemcpyDeviceToHost);
