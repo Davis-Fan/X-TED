@@ -96,7 +96,7 @@ void compute_0(vector<int>& x_orl, vector<int>& x_kr, vector<int>& y_orl, vector
 }
 
 
-vector<vector<int>> standard_ted_2(vector<int>& x_orl, vector<int>& x_kr, vector<int>& y_orl, vector<int>& y_kr, vector<vector<int>>& Delta, vector<vector<int>>& D, vector<vector<int>>& D_tree){
+vector<vector<int>> sequential_cpu_ted(vector<int>& x_orl, vector<int>& x_kr, vector<int>& y_orl, vector<int>& y_kr, vector<vector<int>>& Delta, vector<vector<int>>& D, vector<vector<int>>& D_tree){
 
     int K = (int)x_kr.size();
     int L = (int)y_kr.size();
@@ -193,15 +193,9 @@ vector<vector<int>> standard_ted_1 (vector<string>& x_node, vector<vector<int>>&
     vector<vector<int>> D_forest (m+1, vector<int>(n+1,-1));
     vector<vector<int>> D_tree (m, vector<int>(n,-1));
 
-    vector<vector<int>> result;
+    vector<vector<int>> result_parallel = parallel_cpu_ted(x_orl, x_kr, y_orl, y_kr, Delta_view, D_forest,D_tree, m, n, num_threads,x_adj,y_adj);
 
-    vector<vector<int>> D_forest_2 (m+1, vector<int>(n+1,-1));
-    vector<vector<int>> D_tree_2 (m, vector<int>(n,-1));
-
-    vector<vector<int>> result_parallel = parallel_cpu_ted(x_orl, x_kr, y_orl, y_kr, Delta_view, D_forest_2,D_tree_2, m, n, num_threads,x_adj,y_adj);
-    result = result_parallel;
-
-    return result;
+    return result_parallel;
 }
 
 
