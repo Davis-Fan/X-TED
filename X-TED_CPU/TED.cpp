@@ -16,6 +16,8 @@ int min3(int a, int b, int c){
     }
 }
 
+
+// Find all outermost_right_leaves for each node
 vector<int> outermost_right_leaves(vector<vector<int>>& adj){
     int m = (int)adj.size();
     vector<int> orl(m,-1);
@@ -39,6 +41,8 @@ vector<int> outermost_right_leaves(vector<vector<int>>& adj){
     return orl;
 }
 
+
+// Find all keyroots
 vector<int> key_roots(vector<int>& orl){
     int m = (int)orl.size();
     vector<int> kr_view(m,-1);
@@ -73,30 +77,8 @@ vector<int> key_roots(vector<int>& orl){
 }
 
 
-void compute_0(vector<int>& x_orl, vector<int>& x_kr, vector<int>& y_orl, vector<int>& y_kr, vector<vector<int>>& Delta, vector<vector<int>>& D_forest, vector<vector<int>>& D_tree, int i, int j, int i_0, int i_max, int j_0, int j_max){
-    if ((i == i_max) && (j == j_max)){
-        D_forest[i][j] = 0;
-    }else if ((i <= i_max-1) && (i >= i_0) && (j == j_max)){
-        D_forest[i][j_max] = 1 + D_forest[i + 1][j_max];
-    }else if ((j <= j_max-1) && (j >= j_0) && (i == i_max)){
-        D_forest[i_max][j] = 1 + D_forest[i_max][j + 1];
-    }else if ((i <= i_max-1) && (i >= i_0) && (j <= j_max-1) && (j >= j_0)){
-        if ((x_orl[i] == x_orl[i_0]) && (y_orl[j] == y_orl[j_0])) {
-
-            D_forest[i][j] = min3(Delta[i][j] + D_forest[i + 1][j + 1], 1 + D_forest[i + 1][j], 1 + D_forest[i][j + 1]);
-            D_tree[i][j] = D_forest[i][j];
-
-        } else {
-
-            D_forest[i][j] = min3(D_tree[i][j] + D_forest[x_orl[i] + 1][y_orl[j] + 1], 1 + D_forest[i + 1][j],
-                                           1 + D_forest[i][j + 1]);
-        }
-    }
-
-}
-
-
-vector<vector<int>> sequential_cpu_ted(vector<int>& x_orl, vector<int>& x_kr, vector<int>& y_orl, vector<int>& y_kr, vector<vector<int>>& Delta, vector<vector<int>>& D, vector<vector<int>>& D_tree){
+// Sequential Zhang-Shasha
+vector<vector<int>> sequential_cpu_ted(vector<int>& x_orl, vector<int>& x_kr, vector<int>& y_orl, vector<int>& y_kr, vector<vector<int>>& Cost, vector<vector<int>>& D, vector<vector<int>>& D_tree){
 
     int K = (int)x_kr.size();
     int L = (int)y_kr.size();
@@ -137,7 +119,7 @@ vector<vector<int>> sequential_cpu_ted(vector<int>& x_orl, vector<int>& x_kr, ve
                 for (j = j_max - 1; j > j_0 - 1; j--) {
 
                     if ((x_orl[i] == x_orl[i_0]) & (y_orl[j] == y_orl[j_0])) {
-                        D[i][j] = min3(Delta[i][j] + D[i + 1][j + 1], 1 + D[i + 1][j], 1 + D[i][j + 1]);
+                        D[i][j] = min3(Cost[i][j] + D[i + 1][j + 1], 1 + D[i + 1][j], 1 + D[i][j + 1]);
                         D_tree[i][j] = D[i][j];
                     } else {
                         D[i][j] = min3(D_tree[i][j] + D[x_orl[i] + 1][y_orl[j] + 1], 1 + D[i + 1][j],
@@ -145,13 +127,6 @@ vector<vector<int>> sequential_cpu_ted(vector<int>& x_orl, vector<int>& x_kr, ve
 
                     }
 
-                }
-            }
-
-            // Initialize table again
-            for (i = i_max; i > i_0 - 1; i--) {
-                for (j = j_max; j > j_0 - 1; j--) {
-                    D[i][j] = -1;
                 }
             }
 
@@ -170,7 +145,7 @@ vector<vector<int>> sequential_cpu_ted(vector<int>& x_orl, vector<int>& x_kr, ve
 vector<vector<int>> standard_ted_1 (vector<string>& x_node, vector<vector<int>>& x_adj, vector<string>& y_node, vector<vector<int>>& y_adj, int num_threads, int parallel_version){
     int m = (int)x_adj.size();
     int n = (int)y_adj.size();
-    vector<vector<int>> Delta_view (m, vector<int>(n,0));
+    vector<vector<int>> Cost (m, vector<int>(n,0));
 
     int i;
     int j;
@@ -178,7 +153,7 @@ vector<vector<int>> standard_ted_1 (vector<string>& x_node, vector<vector<int>>&
     for (i=0; i<m; i++){
         for (j=0; j<n; j++){
             if(x_node[i] != y_node[j]){
-                Delta_view[i][j] =1;
+                Cost[i][j] =1;
             }
         }
     }
@@ -193,7 +168,7 @@ vector<vector<int>> standard_ted_1 (vector<string>& x_node, vector<vector<int>>&
     vector<vector<int>> D_forest (m+1, vector<int>(n+1,-1));
     vector<vector<int>> D_tree (m, vector<int>(n,-1));
 
-    vector<vector<int>> result_parallel = parallel_cpu_ted(x_orl, x_kr, y_orl, y_kr, Delta_view, D_forest,D_tree, m, n, num_threads,x_adj,y_adj);
+    vector<vector<int>> result_parallel = parallel_cpu_ted(x_orl, x_kr, y_orl, y_kr, Cost, D_forest,D_tree, m, n, num_threads,x_adj,y_adj);
 
     return result_parallel;
 }

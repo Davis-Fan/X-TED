@@ -1,7 +1,7 @@
 #include "TED_C++.h"
 
 // Compute each table
-void compute(int k, int l, vector<int>& x_orl, vector<int>& x_kr, vector<int>& y_orl, vector<int>& y_kr, vector<vector<int>>& Delta, vector<vector<int>>& D, vector<vector<int>>& D_tree){
+void compute(int k, int l, vector<int>& x_orl, vector<int>& x_kr, vector<int>& y_orl, vector<int>& y_kr, vector<vector<int>>& Cost, vector<vector<int>>& D, vector<vector<int>>& D_tree){
     int i;
     int j;
 
@@ -30,7 +30,7 @@ void compute(int k, int l, vector<int>& x_orl, vector<int>& x_kr, vector<int>& y
 
             if ((x_orl[i] == x_orl[i_0]) & (y_orl[j] == y_orl[j_0])) {
 
-                D[i][j] = min3(Delta[i][j] + D[i + 1][j + 1], 1 + D[i + 1][j], 1 + D[i][j + 1]);
+                D[i][j] = min3(Cost[i][j] + D[i + 1][j + 1], 1 + D[i + 1][j], 1 + D[i][j + 1]);
                 D_tree[i][j] = D[i][j];
 
             } else {
@@ -45,24 +45,25 @@ void compute(int k, int l, vector<int>& x_orl, vector<int>& x_kr, vector<int>& y
 }
 
 // Fetch task
-void task_1( int n, int L, vector<int>& x_orl, vector<int>& x_kr, vector<int>& y_orl, vector<int>& y_kr, vector<vector<int>>& Delta, vector<vector<int>>& D, vector<vector<int>>& D_tree){
+void compute_one_table( int n, int L, vector<int>& x_orl, vector<int>& x_kr, vector<int>& y_orl, vector<int>& y_kr, vector<vector<int>>& Cost, vector<vector<int>>& D, vector<vector<int>>& D_tree){
     int row = n / L;
     int column = n % L;
-    compute(row,column,x_orl,x_kr,y_orl,y_kr,Delta, D, D_tree);
+    compute(row,column,x_orl,x_kr,y_orl,y_kr,Cost, D, D_tree);
 }
 
+
 // Parallel computing
-void task(vector<int>& depth,  vector<int>& worklist_1, vector<int>& worklist_2, int i_begin, int interval, int final, int L, vector<int>& x_orl, vector<int>& x_kr, vector<int>& y_orl, vector<int>& y_kr, vector<vector<int>>& Delta, vector<vector<int>>& D, vector<vector<int>>& D_tree) {
-    int i = i_begin;
+void task(vector<int>& depth,  vector<int>& worklist_1, vector<int>& worklist_2, int begin, int interval, int final, int L, vector<int>& x_orl, vector<int>& x_kr, vector<int>& y_orl, vector<int>& y_kr, vector<vector<int>>& Cost, vector<vector<int>>& D, vector<vector<int>>& D_tree) {
+    int i = begin;
     while (i < final) {
         int task = worklist_1[i];
         worklist_1[i] = -1;
-        task_1(task, L, x_orl, x_kr, y_orl, y_kr, Delta, D, D_tree);
+        compute_one_table(task, L, x_orl, x_kr, y_orl, y_kr, Cost, D, D_tree);
         i = i + interval;
     }
 }
 
-vector<vector<int>> parallel_cpu_ted(vector<int>& x_orl, vector<int>& x_kr, vector<int>& y_orl, vector<int>& y_kr, vector<vector<int>>& Delta, vector<vector<int>>& D, vector<vector<int>>& D_tree, int m, int n, int num_threads, vector<vector<int>>& x_adj, vector<vector<int>>& y_adj){
+vector<vector<int>> parallel_cpu_ted(vector<int>& x_orl, vector<int>& x_kr, vector<int>& y_orl, vector<int>& y_kr, vector<vector<int>>& Cost, vector<vector<int>>& D, vector<vector<int>>& D_tree, int m, int n, int num_threads, vector<vector<int>>& x_adj, vector<vector<int>>& y_adj){
 
     int K = (int)x_kr.size();
     int L = (int)y_kr.size();
@@ -147,40 +148,23 @@ vector<vector<int>> parallel_cpu_ted(vector<int>& x_orl, vector<int>& x_kr, vect
         }
     }
 
-    vector<int> level (max+1,0);
-    for (int i =0;i<=max; i++){
-        for (int k=0; k<depth.size(); k++){
-            if (depth[k] == i){
-                level[i]++;
-            }
-        }
-    }
 
-
-    int total_time = 0;
+    double total_time = 0;
 
 
     while (worklist1_tail != 0) {
         auto start_time = chrono::steady_clock::now();
-        if (worklist1_tail >= num_th) {
 
-            vector<thread> threads;
+        vector<thread> threads;
 
-            for (int inter = 0; inter < num_th; inter++) {
-                threads.push_back(thread(task, ref(depth), ref(worklist1), ref(worklist2), inter, num_th, (int) worklist1_tail, L, ref(x_orl),ref(x_kr), ref(y_orl), ref(y_kr), ref(Delta), ref(D_in_total[inter]), ref(D_tree)));
-            }
-
-            for (auto &th: threads) {
-                th.join();
-            }
-
-        } else {
-            for (int i = 0; i < worklist1_tail; i++) {
-                int task = worklist1[i];
-                worklist1[i] = -1;
-                task_1(task,L,x_orl,x_kr,y_orl,y_kr,Delta, D, D_tree);
-            }
+        for (int inter = 0; inter < num_th; inter++) {
+            threads.push_back(thread(task, ref(depth), ref(worklist1), ref(worklist2), inter, num_th, (int) worklist1_tail, L, ref(x_orl),ref(x_kr), ref(y_orl), ref(y_kr), ref(Cost), ref(D_in_total[inter]), ref(D_tree)));
         }
+
+        for (auto &th: threads) {
+            th.join();
+        }
+
         auto end_time = chrono::steady_clock::now();
         auto ms = chrono::duration_cast<chrono::microseconds>(end_time - start_time).count();
         total_time += static_cast<double>(ms/1000.0);
